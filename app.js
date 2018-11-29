@@ -1,41 +1,73 @@
-$(document).ready(function(){
+$(document).ready(function() {
+  generarMapa();
+  var resumen = $('#resumen');
+  var sensacion = $('#sensacion');
+  var probabilidad = $('#probabilidad');
+  var humedad = $('#humedad');
+  var imagen = $('.img-responsive');
+  var escondido = $('#escondido');
 
-   var url = 'https://cors-anywhere.herokuapp.com/https://api.darksky.net/forecast/'
-   var key = '67be3c918dc1481d4f70cce406af7bb4'
-   var coords = {
-     scl:'-33.4377968,-70.6504451',
-     valpo: '-33.024503,-71.5518119',
-     qta: '-32.879997,-71.2473555'
+  //Variables para descomponer la url y poder hacerla dinámica
+  var url = 'https://cors-anywhere.herokuapp.com/https://api.darksky.net/forecast/';
+  var key = '73820199c77c14e44d59584d7b721d77';
+  //Variable con varios valores= objeto literal
+  var coords = {
+    vdm: '-33.024503,-71.5518119',
+    scl: '-33.4377968,-70.6504451',
+    ccp: '-36.8270169, -73.0503189',
+    pta: '-53.1625446, -70.907785',
+  }
+  var queryParams = ['?exclude=[minutely,hourly,daily,alerts,flags]', 'lang=es', 'units=auto']
 
-    $('#select').on('change',function() {
+  var image = {
+    'clear-day': 'https://image.flaticon.com/icons/svg/365/365237.svg',
+    'rain': 'https://image.flaticon.com/icons/svg/365/365226.svg',
+    'partly-cloudy-day': 'https://image.flaticon.com/icons/svg/365/365229.svg',
+  }
+
+  //Cuando cambie de valor el select ejecutará una función
+
+  $('#select').on('change', function() {
+
+    //La función hará un Request ajax con la url dinámica que tomara el valor del elemento seleccionado para devolver sus coordenadas y filtraremos la información que llega
     $.ajax({
-      url: url + key + '/' + coords[$(this).val()],
+      url: url + key + '/' + coords[$(this).val()] + '?' + queryParams[0] + '&' + queryParams[1] + '&' + queryParams[2],
       method: 'GET'
+
+      //después de hacer el llamado se ejecutará el método then que recibirá una función anónima con argumento data, que será el objeto que traerá la api de vuelta, y lo mostraremos por console log
     }).then(function(data) {
       console.log(data);
+      //mostrar en h2 temperatura y resumen, en la tabla los datos con sus signos e imagen según icon
+      resumen.text(parseInt(data.currently.temperature) + '° ' + data.currently.summary);
+      sensacion.text(parseInt(data.currently.apparentTemperature) + '°');
+      probabilidad.text(data.currently.precipProbability * 100 + '%');
+      humedad.text(data.currently.humidity * 100 + '%');
+      imagen.attr('src', image[data.currently.icon]);
+      escondido.removeAttr('hidden');
     });
-  })
+
+  });
+
+  function generarMapa() {
+
+    var mymap = L.map('map').setView([-33.4377968,-70.6504451], 13);
+    L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+      attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+      maxZoom: 18,
+      id: 'mapbox.streets',
+      accessToken: 'pk.eyJ1Ijoia2ltbG8iLCJhIjoiY2pwMWN2b3M2M2ViZjNza3dha2RpcmZpOCJ9.YJuZeXwiEUfgTVXD2apWRg'
+    }).addTo(mymap);
+      var marker = L.marker([-33.4377968,-70.6504451]).addTo(mymap);
+
+
+  }
+  function changeMarkerPosition(coords){
+    var latitud = coords.split(",")[0];
+    var longitud = coords.split(",")[1];
+    mymap.panTo(new L.LatLng(latitud, longitud));
+
+		L.marker([latitud,longitud]).addTo(mymap);
+  }
+
+
 });
-
-$(document).ready(function(){
-
-
-   }
-
-
-//leafletjs.com > descargar libreria librería ultima versión estable 1.3.4 > El archivo zip descomprimir y agregar carpeta en ruta del proyecto (utilizaremos el js y eñl css) > agregarlo al html con la etiqueta script al final del body y con la eqtiqueta link antes de mi css en head
-//mapbox.com > registrarse > entrar para obtener API KEY
-//>Sección Acces tokens > genera automaticamente un tokens para obtener los datos
-// Tener un contenedor donde irá el mapa (div id=map) que tiene que tener un alto para indicar cuanto medirá
-//En la página de leaflet > tutoriales > guía de inicio (explica lo mismo anterior) > en js indicamos como utilizaremos el mapa Y CON QUE ACCIONES
-// SCRIPT> function generarMapa(){ var mymap = L.map ('iddelmapa').setView([numeros]);}
-//Luego se llama en documnt ready, cuando esté listo el documento inicializar el mapa: generarmapa();
-//siguiente paso: agregar el mapa: L.tileLayer (en el guía de leaflet), se copia el código y se pega dentro de la función generar mapa. Se copia luego el token de mapbox y se pega en accesToken (que está en lo que pegamos anteriormente). al guardar se debería ver el generarMapa
-//centrar el mapa al buscar una ubicación: var mymap =... es mi ubicación en ella se pegan las coordenadas y aparecerá el lugar en el centro
-//agregar marcador: var marker... (en leaflet) dice add to (mymap) ahí va la variable del mapa y la coordenada correspondiente para que  se agregue en nuestro mapa
-//paso siguiente que cambie el marcador y la ubicación al momento que selecciono otro lugar. >ajax>function changeMarkerPosition(coords) { var latitud=coords.split('','')[0] var longitud=coords.split('','')[1]}} (cortar las coordenadas que estan como string en dos elementos (lat y long); var latitu)
-// >buscar en la liberia como mover el mapa > leaflet > mymap.panTo(new L.latlng(Latitud, Longitud))
-
-//buscar como hacer para que se elimine el marcador anterior porque si se hace zoom out se verán los 3 juntos
-
-//Cada accion en una función y cada dato en una variable
